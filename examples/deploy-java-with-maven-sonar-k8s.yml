@@ -1,50 +1,62 @@
-name: End to End CI/CD workflow for Java Applicaton with Maven, Sonar and k8s Intergation
+# Define the GitHub Actions workflow for the end-to-end CI/CD process
+name: End to End CI/CD Workflow for Java Application with Maven, Sonar, and Kubernetes Integration
 
+# Trigger the workflow on each push to the main branch
 on:
   push:
     branches:
       - main
 
+# Define environment variables required for the workflow
 env:
-  KUBECONFIG: ${{ secrets.KUBECONFIG }}
-  SONAR_TOKEN: ${{ secrets.SONAR_TKN }}
+  KUBECONFIG: ${{ secrets.KUBECONFIG }} # Kubernetes configuration
+  SONAR_TOKEN: ${{ secrets.SONAR_TKN }} # SonarQube access token
 
+# Define jobs for the workflow
 jobs:
+  # Define the 'build' job for building and analyzing the code
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Java jdk setup
-      uses: actions/setup-java@v1
-      with:
-        java-version: 12
+      # Set up Java environment
+      - name: Java jdk setup
+        uses: actions/setup-java@v1
+        with:
+          java-version: 12
 
-    - name: maven target # change accordingly
-      run: mvn clean install
+      # Build the application with Maven
+      - name: maven target
+        run: mvn clean install
 
-    - name: Perform analysis on Sonar Qube
-      uses: sonarsource/sonarcloud-github-action@v1
-      with:
-        sonarcloud.organization: <name of your org>
-        sonarcloud.projectKey: <key>
-        sonarcloud.projectName: <name>
-        sonarcloud.token: ${{ env.SONAR_TKN }}
-        sonarcloud.scannerVersion: "4.2.0.1873"
+      # Perform code analysis with SonarQube
+      - name: Perform analysis on Sonar Qube
+        uses: sonarsource/sonarcloud-github-action@v1
+        with:
+          sonarcloud.organization: <name of your org> # Replace with your SonarQube organization
+          sonarcloud.projectKey: <key> # Replace with your SonarQube project key
+          sonarcloud.projectName: <name> # Replace with your SonarQube project name
+          sonarcloud.token: ${{ env.SONAR_TKN }} # SonarQube access token
+          sonarcloud.scannerVersion: "4.2.0.1873"
 
+  # Define the 'deploy' job for deploying the application to Kubernetes
   deploy:
-    needs: build
+    needs: build # Depends on successful completion of 'build' job
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Deploy to k8s
-      uses: stefanzweifel/k8s-action@v2.0.0
-      with:
-        args: apply -f kubernetes/
-      env:
-        KUBECONFIG: ${{ env.KUBECONFIG }}
+      # Deploy the application to Kubernetes
+      - name: Deploy to k8s
+        uses: stefanzweifel/k8s-action@v2.0.0
+        with:
+          args: apply -f kubernetes/ # Apply Kubernetes manifests
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }} # Kubernetes configuration
