@@ -1,29 +1,38 @@
-name: Deploy to k8s
+# Define the GitHub Actions workflow for deploying to Kubernetes
+name: Deploy to Kubernetes
 
+# Trigger the workflow on each push to the main branch
 on:
   push:
     branches:
       - main
 
+# Define environment variables required for the workflow
 env:
-  KUBECONFIG: ${{ secrets.KUBECONFIG }}
+  KUBECONFIG: ${{ secrets.KUBECONFIG }} # Kubernetes configuration
 
+# Define jobs for the workflow
 jobs:
+  # Define the 'deploy' job for deploying the application to Kubernetes
   deploy:
     runs-on: kubernetes
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Create Docker Image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
+      # Create Docker image
+      - name: Create Docker Image
+        uses: docker/build-push-action@v2
+        with:
+          context: . # Use the current directory as context for building the Docker image
+          push: true # Push the Docker image to the registry
 
-    - name: Deploy to k8s
-      uses: appleboy/kubectl-action@v1.0.0
-      with:
-        args: apply -f deployment.yaml
+      # Deploy the application to Kubernetes
+      - name: Deploy to Kubernetes
+        uses: appleboy/kubectl-action@v1.0.0
+        with:
+          args: apply -f deployment.yaml # Apply Kubernetes manifests
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ env.KUBECONFIG }} # Kubernetes configuration
