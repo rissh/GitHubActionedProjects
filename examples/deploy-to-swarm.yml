@@ -1,36 +1,44 @@
+# Define the GitHub Actions workflow for deploying to Docker Swarm
 name: Deploy to Swarm (Docker Swarm)
 
+# Trigger the workflow on each push to the main branch
 on:
   push:
     branches:
       - main
 
+# Define environment variables required for the workflow
 env:
-  DOCKER_HOST: tcp://<ip-address-of-your-swarm-manager>:2376
-  DOCKER_REGISTRY_USER: <username>
-  DOCKER_REGISTRY_PASS: ${{ secrets.DOCKER_REGISTRY_PASS }}
+  DOCKER_HOST: tcp://<ip-address-of-your-swarm-manager>:2376 # Docker Swarm manager address
+  DOCKER_REGISTRY_USER: <username> # Docker registry username
+  DOCKER_REGISTRY_PASS: ${{ secrets.DOCKER_REGISTRY_PASS }} # Docker registry password (stored as a secret)
 
+# Define jobs for the workflow
 jobs:
+  # Define the 'deploy' job for deploying the application to Docker Swarm
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Create Docker Image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: <registry-username>/<image-name>:${{ env.GITHUB_SHA }}
-        username: ${{ env.DOCKER_REGISTRY_USER }}
-        password: ${{ env.DOCKER_REGISTRY_PASS }}
+      # Create Docker image and push to registry
+      - name: Create Docker Image
+        uses: docker/build-push-action@v2
+        with:
+          context: . # Use the current directory as context for building the Docker image
+          push: true # Push the Docker image to the registry
+          tags: <registry-username>/<image-name>:${{ env.GITHUB_SHA }} # Tag the Docker image with the GitHub SHA
+          username: ${{ env.DOCKER_REGISTRY_USER }} # Docker registry username
+          password: ${{ env.DOCKER_REGISTRY_PASS }} # Docker registry password
 
-    - name: Deploy to swarm
-      run: |
-        echo "$DOCKER_REGISTRY_PASS" | docker login --username "$DOCKER_REGISTRY_USER" --password-stdin
-        docker stack deploy -c stack.yaml <stack-name>
-      env:
-        DOCKER_HOST: ${{ env.DOCKER_HOST }}
-        DOCKER_TLS_CERTDIR: "/certs"
+      # Deploy the application to Docker Swarm
+      - name: Deploy to Swarm
+        run: |
+          echo "$DOCKER_REGISTRY_PASS" | docker login --username "$DOCKER_REGISTRY_USER" --password-stdin
+          docker stack deploy -c stack.yaml <stack-name> # Deploy using stack configuration file
+        env:
+          DOCKER_HOST: ${{ env.DOCKER_HOST }} # Docker Swarm manager address
+          DOCKER_TLS_CERTDIR: "/certs" # TLS certificate directory
