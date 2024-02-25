@@ -11,9 +11,9 @@ on:
 jobs:
   # Define the 'build' job for running tests
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
-    # Define strategy for running tests with different Python versions
+    # Define a strategy for running tests with different Python versions
     strategy:
       matrix:
         python-version: [3.8, 3.9]
