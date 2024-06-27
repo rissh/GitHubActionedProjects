@@ -1,0 +1,27 @@
+#
+name: Auto Merge Owner Pr
+
+on:
+  pull-request:
+    types: [opened, reopened]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: flack and pylint
+      run: |
+        pip install -r requirenments.txt
+        flake8 --ignore=E501,E231 *.py tests/*.py
+        pylint --errors-only --disable=C0301 --disable=C0326 *.py tests/*.py
+
+    - name: unit test
+      run: python -m unittest --verbose --failfast
+
+# Incomplete : Merge Part
